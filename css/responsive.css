@@ -1,0 +1,68 @@
+/* ============================================
+   responsive.css — tablet y móvil
+   ============================================ */
+
+.mobile-only { display: none; }
+
+@media (max-width: 1100px) {
+  .dashboard { grid-template-columns: repeat(5, minmax(110px, 1fr)); overflow-x: auto; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 400;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar.collapsed { width: var(--sidebar-width); padding: 16px 12px; }
+  .sidebar.collapsed .brand-name,
+  .sidebar.collapsed .btn-new-board span,
+  .sidebar.collapsed .sidebar-section-title,
+  .sidebar.collapsed .sidebar-link span,
+  .sidebar.collapsed .board-link-name,
+  .sidebar.collapsed .board-link-count { display: inline; }
+
+  .mobile-only { display: flex; }
+  #sidebar-toggle { display: none; }
+
+  .dashboard { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+  .search-box { width: 150px; }
+  .board-title { font-size: 16px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .column { width: 260px; }
+}
+
+@media (max-width: 560px) {
+  .topbar { padding: 12px 14px; flex-wrap: wrap; }
+  .dashboard { padding: 14px 14px 0; grid-template-columns: repeat(2, 1fr); }
+  .filters-bar { padding: 12px 14px 0; flex-wrap: wrap; }
+  .board-view, .calendar-view, .stats-view, .history-view { padding: 12px 14px 16px; }
+  .search-box { width: 120px; }
+  .field-row { grid-template-columns: 1fr; }
+  .calendar-grid, .calendar-weekdays { grid-template-columns: repeat(7, minmax(36px, 1fr)); gap: 4px; }
+  .calendar-cell { min-height: 64px; padding: 5px; }
+  .calendar-task-chip { font-size: 9px; }
+}
+
+/* Overlay para sidebar móvil */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 390;
+}
+@media (max-width: 860px) {
+  .sidebar-overlay.visible { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
