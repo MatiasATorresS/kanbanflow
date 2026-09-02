@@ -21,7 +21,10 @@
 }
 
 .column {
-  background: var(--bg-sunken);
+  background:
+    linear-gradient(var(--bg-sunken), var(--bg-sunken)) padding-box,
+    var(--border-subtle) border-box;
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   width: 290px;
   flex-shrink: 0;
@@ -69,12 +72,12 @@
 }
 
 .column-add-btn {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--text-tertiary);
   transition: background var(--transition-fast), color var(--transition-fast);
 }
@@ -107,9 +110,17 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition: box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-fast);
 }
-.task-card:hover { box-shadow: var(--shadow-md); }
+.task-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.task-card:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-md);
+}
 .task-card.dragging {
   opacity: 0.5;
   transform: rotate(2deg) scale(1.02);
@@ -124,7 +135,13 @@
   border-radius: var(--radius-md);
   background: rgba(91, 95, 239, 0.04);
   margin: 0;
+  animation: placeholder-pulse 1.1s ease-in-out infinite;
   transition: height var(--transition-fast);
+}
+
+@keyframes placeholder-pulse {
+  0%, 100% { background: rgba(91, 95, 239, 0.04); }
+  50% { background: rgba(91, 95, 239, 0.10); }
 }
 
 .task-card-top {
@@ -282,7 +299,7 @@
 .calendar-task-chip {
   font-size: 10.5px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 5px;
   background: var(--accent-primary-soft);
   color: var(--accent-primary);
@@ -290,6 +307,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+}
+.calendar-task-chip:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
 }
 .calendar-task-chip.priority-alta { background: var(--color-danger-soft); color: var(--color-danger); }
 .calendar-task-chip.priority-media { background: var(--color-warning-soft); color: #7A5A14; }

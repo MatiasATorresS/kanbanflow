@@ -1,10 +1,44 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-CL">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KanbanFlow — Gestor de tareas</title>
+<title>KanbanFlow — Gestor de tareas, tableros y productividad</title>
+<meta name="description" content="KanbanFlow, un gestor de tareas estilo Trello/Linear con tableros, drag & drop, calendario, estadísticas e historial de actividad. Totalmente local y sin dependencias.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#5B5FEF">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://kanbanflow.example.com/">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="KanbanFlow — Gestor de tareas">
+<meta property="og:description" content="Organiza tus tareas en tableros, columnas y calendario con drag & drop nativo, todo persistido en tu navegador.">
+<meta property="og:locale" content="es_CL">
+<!-- Twitter -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="KanbanFlow — Gestor de tareas">
+<meta name="twitter:description" content="Organiza tus tareas en tableros, columnas y calendario, todo persistido en tu navegador.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "KanbanFlow",
+  "description": "Gestor de tareas estilo Trello/Linear con tableros, drag & drop, calendario, estadísticas e historial de actividad.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "es-CL",
+  "author": {
+    "@type": "Person",
+    "name": "Matías Torres Sandoval"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CLP"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,6 +50,8 @@
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Saltar al contenido principal</a>
+
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
 <div class="app-shell">
@@ -24,70 +60,70 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 28 28" fill="none">
+        <svg class="brand-mark" viewBox="0 0 28 28" fill="none" aria-hidden="true">
           <rect x="2" y="2" width="7" height="24" rx="2.5" fill="currentColor" opacity="0.95"/>
           <rect x="11" y="2" width="7" height="15" rx="2.5" fill="currentColor" opacity="0.65"/>
           <rect x="20" y="2" width="6" height="19" rx="2.5" fill="currentColor" opacity="0.35"/>
         </svg>
         <span class="brand-name">KanbanFlow</span>
       </div>
-      <button class="icon-btn" id="sidebar-toggle" aria-label="Contraer barra lateral" title="Contraer barra lateral">
-        <svg viewBox="0 0 20 20" width="18" height="18"><path d="M7 4l-5 6 5 6M13 4l-5 6 5 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <button class="icon-btn" id="sidebar-toggle" aria-label="Contraer barra lateral" aria-expanded="true" title="Contraer barra lateral">
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 4l-5 6 5 6M13 4l-5 6 5 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
 
     <button class="btn-new-board" id="new-board-btn">
-      <svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       Nuevo tablero
     </button>
 
-    <nav class="board-list" id="board-list" aria-label="Tableros"></nav>
+    <nav class="board-list" id="board-list" aria-label="Tableros" aria-live="polite"></nav>
 
     <div class="sidebar-section">
-      <p class="sidebar-section-title">Vistas</p>
-      <button class="sidebar-link" id="view-calendar-btn" data-view="calendar">
-        <svg viewBox="0 0 20 20" width="16" height="16"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <p class="sidebar-section-title" id="view-section-title">Vistas</p>
+      <button class="sidebar-link" id="view-calendar-btn" data-view="calendar" aria-describedby="view-section-title">
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         Calendario
       </button>
-      <button class="sidebar-link" id="view-stats-btn" data-view="stats">
-        <svg viewBox="0 0 20 20" width="16" height="16"><path d="M3 17V9M9 17V3M15 17v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <button class="sidebar-link" id="view-stats-btn" data-view="stats" aria-describedby="view-section-title">
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3 17V9M9 17V3M15 17v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         Estadísticas
       </button>
-      <button class="sidebar-link" id="view-history-btn" data-view="history">
-        <svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <button class="sidebar-link" id="view-history-btn" data-view="history" aria-describedby="view-section-title">
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
         Historial
       </button>
     </div>
 
     <div class="sidebar-footer">
       <button class="sidebar-link" id="export-btn">
-        <svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 13V3m0 10l-3.5-3.5M10 13l3.5-3.5M4 16h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 13V3m0 10l-3.5-3.5M10 13l3.5-3.5M4 16h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
         Exportar tablero
       </button>
       <button class="sidebar-link" id="import-btn">
-        <svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 3v10m0-10l-3.5 3.5M10 3l3.5 3.5M4 16h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3v10m0-10l-3.5 3.5M10 3l3.5 3.5M4 16h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
         Importar tablero
       </button>
       <input type="file" id="import-input" accept="application/json" hidden>
       <button class="sidebar-link" id="shortcuts-btn">
-        <svg viewBox="0 0 20 20" width="16" height="16"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5.5 9h.01M8.5 9h.01M11.5 9h.01M14.5 9h.01M6 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5.5 9h.01M8.5 9h.01M11.5 9h.01M14.5 9h.01M6 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         Atajos de teclado
       </button>
-      <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
-        <span class="theme-icon theme-icon-light">☀️</span>
-        <span class="theme-icon theme-icon-dark">🌙</span>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">
+        <span class="theme-icon theme-icon-light" aria-hidden="true">☀️</span>
+        <span class="theme-icon theme-icon-dark" aria-hidden="true">🌙</span>
       </button>
     </div>
   </aside>
 
   <!-- ===== MAIN ===== -->
-  <main class="main-area">
+  <main class="main-area" id="main-content" tabindex="-1">
 
     <!-- Header / Dashboard -->
     <header class="topbar">
       <div class="topbar-left">
         <button class="icon-btn mobile-only" id="mobile-sidebar-btn" aria-label="Abrir menú">
-          <svg viewBox="0 0 20 20" width="20" height="20"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         </button>
         <h1 class="board-title" id="board-title">Tablero</h1>
         <span class="board-progress-chip" id="board-progress-chip"></span>
@@ -95,11 +131,13 @@
 
       <div class="topbar-right">
         <div class="search-box">
-          <svg viewBox="0 0 20 20" width="15" height="15"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M14 14l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          <input type="text" id="search-input" placeholder="Buscar tareas… (F)" autocomplete="off">
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M14 14l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <label for="search-input" class="visually-hidden">Buscar tareas</label>
+          <input type="search" id="search-input" placeholder="Buscar tareas… (F)" autocomplete="off" aria-describedby="search-shortcut-hint">
+          <span id="search-shortcut-hint" class="visually-hidden">Atajo de teclado: F</span>
         </div>
         <button class="btn-primary" id="new-task-btn">
-          <svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Nueva tarea
         </button>
       </div>
@@ -138,11 +176,11 @@
     <section class="calendar-view" id="calendar-view" hidden>
       <div class="calendar-header">
         <button class="icon-btn" id="cal-prev-btn" aria-label="Mes anterior">
-          <svg viewBox="0 0 20 20" width="16" height="16"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <h2 id="calendar-month-label">Mes</h2>
         <button class="icon-btn" id="cal-next-btn" aria-label="Mes siguiente">
-          <svg viewBox="0 0 20 20" width="16" height="16"><path d="M8 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M8 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <button class="btn-ghost" id="cal-today-btn">Hoy</button>
       </div>
@@ -184,12 +222,12 @@
 </div>
 
 <!-- ===== TASK MODAL ===== -->
-<div class="modal" id="task-modal">
+<div class="modal" id="task-modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
   <div class="modal-content">
     <div class="modal-header">
       <h2 id="task-modal-title">Nueva tarea</h2>
       <button class="icon-btn" data-close-modal aria-label="Cerrar">
-        <svg viewBox="0 0 20 20" width="18" height="18"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
     </div>
     <form id="task-form" class="task-form">
@@ -249,12 +287,12 @@
 </div>
 
 <!-- ===== NEW BOARD MODAL ===== -->
-<div class="modal" id="board-modal">
+<div class="modal" id="board-modal" role="dialog" aria-modal="true" aria-labelledby="board-modal-title">
   <div class="modal-content modal-small">
     <div class="modal-header">
-      <h2>Nuevo tablero</h2>
+      <h2 id="board-modal-title">Nuevo tablero</h2>
       <button class="icon-btn" data-close-modal aria-label="Cerrar">
-        <svg viewBox="0 0 20 20" width="18" height="18"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
     </div>
     <form id="board-form" class="task-form">
@@ -273,10 +311,10 @@
 </div>
 
 <!-- ===== CONFIRM MODAL ===== -->
-<div class="modal" id="confirm-modal">
+<div class="modal" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
   <div class="modal-content modal-small">
     <div class="modal-header">
-      <h2 class="confirm-title">¿Confirmar acción?</h2>
+      <h2 class="confirm-title" id="confirm-modal-title">¿Confirmar acción?</h2>
     </div>
     <p class="confirm-message">Esta acción no se puede deshacer.</p>
     <div class="modal-actions">
@@ -289,30 +327,33 @@
 </div>
 
 <!-- ===== SHORTCUTS MODAL ===== -->
-<div class="modal" id="shortcuts-modal">
+<div class="modal" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
   <div class="modal-content modal-small">
     <div class="modal-header">
-      <h2>Atajos de teclado</h2>
+      <h2 id="shortcuts-modal-title">Atajos de teclado</h2>
       <button class="icon-btn" data-close-modal aria-label="Cerrar">
-        <svg viewBox="0 0 20 20" width="18" height="18"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
     </div>
     <ul class="shortcuts-list">
       <li><kbd>N</kbd><span>Nueva tarea</span></li>
       <li><kbd>F</kbd><span>Buscar</span></li>
+      <li><kbd>Enter</kbd><span>Abrir tarea enfocada</span></li>
+      <li><kbd>Alt</kbd> + <kbd>←/→</kbd><span>Mover tarea a otra columna</span></li>
+      <li><kbd>Alt</kbd> + <kbd>↑/↓</kbd><span>Reordenar tarea</span></li>
       <li><kbd>Esc</kbd><span>Cerrar modal</span></li>
     </ul>
   </div>
 </div>
 
 <!-- ===== TOAST CONTAINER ===== -->
-<div class="toast-container" id="toast-container" aria-live="polite"></div>
+<div class="toast-container" id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <!-- ===== DUE NOTIFICATION BANNER ===== -->
-<div class="due-banner" id="due-banner" hidden>
+<div class="due-banner" id="due-banner" role="alert" hidden>
   <span id="due-banner-text"></span>
   <button class="icon-btn" id="due-banner-close" aria-label="Cerrar aviso">
-    <svg viewBox="0 0 20 20" width="16" height="16"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
   </button>
 </div>
 

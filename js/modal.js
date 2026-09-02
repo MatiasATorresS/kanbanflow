@@ -12,8 +12,39 @@ export function openModal(modalEl) {
   modalEl.classList.add('open');
   document.body.classList.add('modal-open');
 
+  // Asociar el manejador de foco (focus trap) una sola vez
+  if (!modalEl.dataset.focusTrap) {
+    modalEl.dataset.focusTrap = 'true';
+    modalEl.addEventListener('keydown', onModalKeydown);
+  }
+
   const firstInput = modalEl.querySelector('input, textarea, select, button');
   firstInput?.focus();
+}
+
+const FOCUSABLE =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+function getFocusable(modalEl) {
+  return Array.from(modalEl.querySelectorAll(FOCUSABLE))
+    .filter(el => !el.hasAttribute('hidden') && el.offsetParent !== null && !el.disabled);
+}
+
+function onModalKeydown(e) {
+  if (e.key !== 'Tab') return;
+  const focusable = getFocusable(activeModalEl);
+  if (focusable.length === 0) return;
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
 }
 
 export function closeModal(modalEl) {

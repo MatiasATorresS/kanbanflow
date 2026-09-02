@@ -64,20 +64,21 @@ function renderBoardList() {
     const stats = getBoardStats(data, board.id);
     const active = board.id === data.activeBoardId;
     return `
-      <button class="board-link ${active ? 'active' : ''}" data-board-id="${board.id}">
-        <span class="board-link-dot" style="background:${board.color}"></span>
-        <span class="board-link-name">${escapeHtml(board.name)}</span>
-        <span class="board-link-count">${stats.total}</span>
-        <span class="board-link-delete" data-delete-board="${board.id}" title="Eliminar tablero">
-          <svg viewBox="0 0 16 16" width="13" height="13"><path d="M3 4h10M6.5 4V2.5h3V4M4.5 4l.5 9.5h6l.5-9.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-      </button>
+      <div class="board-link-wrap ${active ? 'active' : ''}">
+        <button class="board-link ${active ? 'active' : ''}" data-board-id="${board.id}" ${active ? 'aria-current="page"' : ''}>
+          <span class="board-link-dot" style="background:${board.color}" aria-hidden="true"></span>
+          <span class="board-link-name">${escapeHtml(board.name)}</span>
+          <span class="board-link-count" aria-label="${stats.total} tareas">${stats.total}</span>
+        </button>
+        <button class="board-link-delete" data-delete-board="${board.id}" aria-label="Eliminar tablero ${escapeHtml(board.name)}" title="Eliminar tablero">
+          <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M3 4h10M6.5 4V2.5h3V4M4.5 4l.5 9.5h6l.5-9.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
     `;
   }).join('');
 
   list.querySelectorAll('.board-link').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      if (e.target.closest('[data-delete-board]')) return;
+    btn.addEventListener('click', () => {
       setActiveBoard(data, btn.dataset.boardId);
       persist();
       switchView('board');
@@ -178,15 +179,15 @@ function renderBoardView() {
       <div class="column" data-column-id="${col.id}">
         <div class="column-header">
           <div class="column-header-left">
-            <span class="column-dot ${col.id}"></span>
+            <span class="column-dot ${col.id}" aria-hidden="true"></span>
             <span class="column-name">${escapeHtml(col.name)}</span>
-            <span class="column-count">${tasks.length}</span>
+            <span class="column-count" aria-label="${tasks.length} tareas">${tasks.length}</span>
           </div>
-          <button class="column-add-btn" data-add-to="${col.id}" title="Agregar tarea">
-            <svg viewBox="0 0 16 16" width="13" height="13"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <button class="column-add-btn" data-add-to="${col.id}" title="Agregar tarea" aria-label="Agregar tarea a ${escapeHtml(col.name)}">
+            <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
         </div>
-        <div class="task-list" data-column-id="${col.id}">
+        <div class="task-list" data-column-id="${col.id}" aria-label="${escapeHtml(col.name)}">
           ${tasks.length ? tasks.map(t => taskCardHTML(t)).join('') : columnEmptyHTML(isFiltering)}
         </div>
       </div>
@@ -199,6 +200,7 @@ function renderBoardView() {
     const columnId = cardEl.closest('.task-list').dataset.columnId;
     makeDraggable(cardEl, taskId, columnId);
     cardEl.addEventListener('click', () => openTaskModal({ taskId }));
+    cardEl.addEventListener('keydown', (e) => handleTaskCardKeys(e, cardEl, taskId, columnId));
   });
 
   // Wire up drop zones
@@ -223,24 +225,97 @@ function columnEmptyHTML(isFiltering) {
 function taskCardHTML(task) {
   const labels = task.labelIds.map(id => data.labels.find(l => l.id === id)).filter(Boolean);
   const due = dueLabel(task.dueDate);
+  const title = escapeHtml(task.title);
+  const desc = task.description ? escapeHtml(task.description) : '';
 
   return `
-    <div class="task-card priority-${task.priority}" data-task-id="${task.id}">
+    <div class="task-card priority-${task.priority}" data-task-id="${task.id}"
+         role="button" tabindex="0"
+         aria-label="Tarea: ${title}.${due ? ' ' + due.text : ''}. Pulsa Enter para abrir, Alt + flechas para mover.">
       <div class="task-card-top">
-        <span class="task-card-title">${escapeHtml(task.title)}</span>
-        ${task.color ? `<span class="task-card-color-dot" style="background:${task.color}"></span>` : ''}
+        <span class="task-card-title">${title}</span>
+        ${task.color ? `<span class="task-card-color-dot" style="background:${task.color}" aria-hidden="true"></span>` : ''}
       </div>
-      ${task.description ? `<p class="task-card-desc">${escapeHtml(task.description)}</p>` : ''}
+      ${task.description ? `<p class="task-card-desc">${desc}</p>` : ''}
       ${labels.length ? `
         <div class="task-card-labels">
           ${labels.map(l => `<span class="task-card-label" style="background:${l.color}22;color:${l.color}">${escapeHtml(l.name)}</span>`).join('')}
         </div>` : ''}
       <div class="task-card-footer">
-        ${due ? `<span class="task-card-due ${due.level}">${due.level === 'today' ? '⚠️ ' : ''}${due.text}</span>` : '<span></span>'}
-        ${task.assignee ? `<span class="task-card-assignee" title="${escapeHtml(task.assignee)}">${getInitials(task.assignee)}</span>` : ''}
+        ${due ? `<span class="task-card-due ${due.level}">${due.level === 'today' ? '<span aria-hidden="true">⚠️</span> ' : ''}${due.text}</span>` : '<span></span>'}
+        ${task.assignee ? `<span class="task-card-assignee" title="${escapeHtml(task.assignee)}" aria-label="Responsable: ${escapeHtml(task.assignee)}">${getInitials(task.assignee)}</span>` : ''}
       </div>
     </div>
   `;
+}
+
+// Alternativa de teclado al drag & drop (WCAG 2.5.7 - Dragging movements)
+function handleTaskCardKeys(e, cardEl, taskId, columnId) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === ' ' && e.target.classList.contains('task-card')) {
+      e.preventDefault();
+    }
+    openTaskModal({ taskId });
+    return;
+  }
+
+  if (!e.altKey) return;
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+
+  e.preventDefault();
+  const board = getActiveBoard(data);
+  const col = board.columns.find(c => c.id === columnId);
+  if (!col || !col.taskIds.includes(taskId)) return;
+
+  const taskList = cardEl.closest('.task-list');
+  let toColumnId = columnId;
+  let toIndex;
+
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const dir = e.key === 'ArrowLeft' ? -1 : 1;
+    const idx = board.columns.indexOf(col);
+    const targetCol = board.columns[idx + dir];
+    if (!targetCol) return;
+    toColumnId = targetCol.id;
+    toIndex = dir === 1 ? targetCol.taskIds.length : 0;
+  } else {
+    const dir = e.key === 'ArrowUp' ? -1 : 1;
+    const from = col.taskIds.indexOf(taskId);
+    const to = from + dir;
+    if (to < 0 || to >= col.taskIds.length) return;
+    toIndex = to;
+  }
+
+  if (toColumnId === columnId && taskList) {
+    const cards = Array.from(taskList.querySelectorAll('.task-card'));
+    const movingEl = cards.find(c => c.dataset.taskId === taskId);
+    const targetCard = cards[toIndex];
+    if (movingEl && targetCard) {
+      moveWithinColumn(columnId, taskId, toIndex);
+      persist();
+      renderBoardView();
+      requestAnimationFrame(() => {
+        const reEl = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
+        reEl?.focus();
+      });
+      return;
+    }
+  }
+
+  handleTaskDrop({ taskId, fromColumnId: columnId, toColumnId, toIndex });
+  requestAnimationFrame(() => {
+    const reEl = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
+    reEl?.focus();
+  });
+}
+
+function moveWithinColumn(columnId, taskId, toIndex) {
+  const board = getActiveBoard(data);
+  const col = board.columns.find(c => c.id === columnId);
+  const idx = col.taskIds.indexOf(taskId);
+  if (idx === -1) return;
+  col.taskIds.splice(idx, 1);
+  col.taskIds.splice(toIndex, 0, taskId);
 }
 
 function handleTaskDrop({ taskId, fromColumnId, toColumnId, toIndex }) {
@@ -392,18 +467,26 @@ function renderCalendarView() {
     const extra = dayTasks.length - visible.length;
 
     return `
-      <div class="calendar-cell ${cell.inCurrentMonth ? '' : 'outside'} ${isToday ? 'is-today' : ''}">
-        <span class="calendar-cell-date">${cell.date.getDate()}</span>
+      <div class="calendar-cell ${cell.inCurrentMonth ? '' : 'outside'} ${isToday ? 'is-today' : ''}" ${isToday ? 'aria-current="date"' : ''}>
+        <span class="calendar-cell-date" aria-label="${cell.date.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })}">${cell.date.getDate()}</span>
         ${visible.map(t => `
-          <span class="calendar-task-chip priority-${t.priority}" data-task-id="${t.id}" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
+          <span class="calendar-task-chip priority-${t.priority}" data-task-id="${t.id}"
+                role="button" tabindex="0" title="${escapeHtml(t.title)}"
+                aria-label="Abrir tarea ${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
         `).join('')}
-        ${extra > 0 ? `<span class="calendar-more">+${extra} más</span>` : ''}
+        ${extra > 0 ? `<span class="calendar-more" aria-label="${extra} tareas más">+${extra} más</span>` : ''}
       </div>
     `;
   }).join('');
 
   document.getElementById('calendar-grid').querySelectorAll('.calendar-task-chip').forEach(chip => {
     chip.addEventListener('click', () => openTaskModal({ taskId: chip.dataset.taskId }));
+    chip.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openTaskModal({ taskId: chip.dataset.taskId });
+      }
+    });
   });
 }
 
@@ -505,7 +588,10 @@ function switchView(view) {
   filtersBar.hidden = view !== 'board';
 
   document.querySelectorAll('.sidebar-link[data-view]').forEach(link => {
-    link.classList.toggle('active', link.dataset.view === view);
+    const active = link.dataset.view === view;
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
   });
 
   if (view === 'calendar') renderCalendarView();
@@ -614,13 +700,23 @@ function setupExportImport() {
 function setupTheme() {
   const theme = Storage.getTheme();
   document.documentElement.setAttribute('data-theme', theme);
+  applyThemeState(theme);
 
   document.getElementById('theme-toggle').addEventListener('click', () => {
     const current = document.documentElement.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
+    applyThemeState(next);
     Storage.setTheme(next);
   });
+}
+
+function applyThemeState(theme) {
+  const toggle = document.getElementById('theme-toggle');
+  toggle.setAttribute('aria-pressed', theme === 'dark');
+  toggle.setAttribute('aria-label', theme === 'dark'
+    ? 'Cambiar a tema claro'
+    : 'Cambiar a tema oscuro');
 }
 
 // ============================================
@@ -628,9 +724,19 @@ function setupTheme() {
 // ============================================
 function setupSidebarToggle() {
   const sidebar = document.getElementById('sidebar');
-  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  toggleBtn.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
+    updateSidebarExpanded();
   });
+
+  const updateSidebarExpanded = () => {
+    toggleBtn.setAttribute('aria-expanded', String(!sidebar.classList.contains('collapsed')));
+    toggleBtn.setAttribute('aria-label', sidebar.classList.contains('collapsed')
+      ? 'Expandir barra lateral'
+      : 'Contraer barra lateral');
+  };
+  updateSidebarExpanded();
 
   const overlay = document.getElementById('sidebar-overlay');
   const openMobile = () => {

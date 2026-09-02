@@ -12,3 +12,7 @@ Thumbs.db
 
 # Dependencias (por si en el futuro se agrega tooling)
 node_modules/
+
+# Skills de agentes (locales, no se versionan)
+.agents/
+skills-lock.json
