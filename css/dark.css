@@ -4,26 +4,26 @@
    ============================================ */
 
 html[data-theme="dark"] {
-  --bg-canvas: #15161A;
-  --bg-surface: #1C1D22;
-  --bg-surface-raised: #22232A;
-  --bg-sunken: #1A1B20;
-  --border-subtle: #2C2D34;
-  --border-strong: #3A3B44;
+  --bg-canvas: #191713;
+  --bg-surface: #211E19;
+  --bg-surface-raised: #29251F;
+  --bg-sunken: #1D1A16;
+  --border-subtle: #332E27;
+  --border-strong: #423C32;
 
-  --text-primary: #EDECEA;
-  --text-secondary: #A0A0A8;
-  --text-tertiary: #6B6B74;
+  --text-primary: #EFECE5;
+  --text-secondary: #A9A196;
+  --text-tertiary: #736B60;
 
-  --accent-primary: #7B7FF5;
-  --accent-primary-hover: #9396F7;
-  --accent-primary-soft: #2A2A4A;
+  --accent-primary: #8A90F3;
+  --accent-primary-hover: #9EA3F5;
+  --accent-primary-soft: #2A2A46;
 
   --color-success: #5FA384;
   --color-success-soft: #1E332A;
-  --color-danger: #E87C68;
+  --color-danger: #E57A63;
   --color-danger-soft: #3A2420;
-  --color-warning: #E0B65C;
+  --color-warning: #DEB25C;
   --color-warning-soft: #3A301C;
   --color-info: #5FA8DE;
 
@@ -34,7 +34,7 @@ html[data-theme="dark"] {
 
 html[data-theme="dark"] .due-banner {
   background: #3A301C;
-  color: #E0B65C;
+  color: #DEB25C;
   border-color: #4A3D24;
 }
 

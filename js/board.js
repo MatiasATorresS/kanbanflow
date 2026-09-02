@@ -4,7 +4,7 @@
 import { uid, Storage } from './storage.js';
 import { getTasksForBoard } from './task.js';
 
-const BOARD_COLORS = ['#5B5FEF', '#4D8B6F', '#E0654F', '#D9A53D', '#C2469A', '#3D8BC4'];
+const BOARD_COLORS = ['#4F5AE8', '#3E8C6C', '#D96049', '#C98A19', '#B55A9E', '#3D86B8'];
 
 export function createBoard(data, name, color) {
   const board = {

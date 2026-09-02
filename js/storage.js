@@ -5,12 +5,12 @@ const STORAGE_KEY = 'kanbanflow_data_v1';
 const THEME_KEY = 'kanbanflow_theme';
 
 const DEFAULT_LABELS = [
-  { id: 'lbl-frontend', name: 'Frontend', color: '#5B5FEF' },
-  { id: 'lbl-backend', name: 'Backend', color: '#4D8B6F' },
-  { id: 'lbl-bug', name: 'Bug', color: '#E0654F' },
-  { id: 'lbl-diseno', name: 'Diseño', color: '#D9A53D' },
-  { id: 'lbl-importante', name: 'Importante', color: '#C2469A' },
-  { id: 'lbl-universidad', name: 'Universidad', color: '#3D8BC4' }
+  { id: 'lbl-frontend', name: 'Frontend', color: '#4F5AE8' },
+  { id: 'lbl-backend', name: 'Backend', color: '#3E8C6C' },
+  { id: 'lbl-bug', name: 'Bug', color: '#D96049' },
+  { id: 'lbl-diseno', name: 'Diseño', color: '#C98A19' },
+  { id: 'lbl-importante', name: 'Importante', color: '#B55A9E' },
+  { id: 'lbl-universidad', name: 'Universidad', color: '#3D86B8' }
 ];
 
 const COLUMN_TEMPLATE = () => ([
@@ -33,7 +33,7 @@ function defaultData() {
       {
         id: boardId,
         name: 'Desarrollo Web',
-        color: '#5B5FEF',
+        color: '#4F5AE8',
         columns: COLUMN_TEMPLATE(),
         createdAt: new Date().toISOString()
       }

@@ -78,7 +78,7 @@ Luego abrir `http://localhost:8080` en el navegador.
 
 ## 🎨 Diseño
 
-La interfaz está inspirada en Trello, Linear y Jira, con identidad propia: tipografía Sora para títulos, Inter para texto, JetBrains Mono para cifras y fechas. Cada tarjeta de tarea usa un borde de acento por prioridad (rojo coral / ámbar / verde salvia), y el tema oscuro está calibrado con su propia paleta de contraste, no solo una inversión de colores.
+La interfaz está inspirada en Trello, Linear y Jira, con identidad propia: tipografía editorial **Fraunces** (serif) para títulos y cifras destacadas, **Manrope** para el texto, y **JetBrains Mono** para fechas y datos. Cada tarjeta de tarea usa un borde de acento por prioridad (coral / ámbar / verde salvia), el fondo luce un degradado atmosférico con textura de grano muy sutil, y el tema oscuro está calibrado con su propia paleta de contraste cálida, no solo una inversión de colores.
 
 ## 📌 Notas de implementación
 

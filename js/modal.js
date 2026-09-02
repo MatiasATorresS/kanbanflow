@@ -101,7 +101,7 @@ export function fillTaskForm(formEl, task) {
   formEl.querySelector('[name="priority"]').value = task.priority;
   formEl.querySelector('[name="assignee"]').value = task.assignee || '';
   const colorInput = formEl.querySelector('[name="color"]');
-  if (colorInput) colorInput.value = task.color || '#5B5FEF';
+  if (colorInput) colorInput.value = task.color || '#4F5AE8';
 }
 
 export function confirmDialog({ title, message, confirmText = 'Eliminar', danger = true }) {

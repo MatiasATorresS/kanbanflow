@@ -725,10 +725,13 @@ function applyThemeState(theme) {
 function setupSidebarToggle() {
   const sidebar = document.getElementById('sidebar');
   const toggleBtn = document.getElementById('sidebar-toggle');
-  toggleBtn.addEventListener('click', () => {
+  const brand = document.querySelector('.brand');
+  const toggle = () => {
     sidebar.classList.toggle('collapsed');
     updateSidebarExpanded();
-  });
+  };
+  toggleBtn.addEventListener('click', toggle);
+  if (brand) brand.addEventListener('click', toggle);
 
   const updateSidebarExpanded = () => {
     toggleBtn.setAttribute('aria-expanded', String(!sidebar.classList.contains('collapsed')));

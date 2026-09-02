@@ -26,6 +26,17 @@
   .sidebar.collapsed .board-link-name,
   .sidebar.collapsed .board-link-count { display: inline; }
 
+  /* En móvil la barra siempre se muestra expandida: resetea el centrado colapsado */
+  .sidebar.collapsed .sidebar-header { flex-direction: row; justify-content: space-between; align-items: center; gap: 0; padding: 4px 6px 16px; }
+  .sidebar.collapsed .brand, .brand { gap: 8px; padding-right: 2px; }
+  .sidebar.collapsed .btn-new-board { width: 100%; height: auto; padding: 9px 12px; margin: 0 0 12px; border-radius: var(--radius-md); }
+  .sidebar.collapsed .board-link-wrap { justify-content: flex-start; border-radius: var(--radius-sm); }
+  .sidebar.collapsed .board-link { justify-content: flex-start; padding: 8px 10px; width: 100%; }
+  .sidebar.collapsed .sidebar-section { display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
+  .sidebar.collapsed .sidebar-link { justify-content: flex-start; padding: 8px 10px; width: 100%; }
+  .sidebar.collapsed .sidebar-footer { align-items: stretch; gap: 2px; }
+  .sidebar.collapsed .theme-toggle { justify-content: flex-start; padding: 8px 10px; width: 100%; }
+
   .mobile-only { display: flex; }
   #sidebar-toggle { display: none; }
 
