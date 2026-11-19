@@ -1,364 +1,456 @@
 <!DOCTYPE html>
-<html lang="es-CL">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KanbanFlow — Gestor de tareas, tableros y productividad</title>
-<meta name="description" content="KanbanFlow, un gestor de tareas estilo Trello/Linear con tableros, drag & drop, calendario, estadísticas e historial de actividad. Totalmente local y sin dependencias.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KanbanFlow — Tableros, tareas y foco diario</title>
+<meta name="description" content="KanbanFlow es un gestor de tareas visual con tableros kanban, arrastrar y soltar, calendario, estadísticas e historial. Rápido, privado y 100% local.">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#4F5AE8">
+<meta name="author" content="Matías Torres Sandoval">
+<meta name="theme-color" content="#F6F2EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1B1814" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <link rel="canonical" href="https://kanbanflow.example.com/">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
-<!-- Open Graph -->
+<link rel="manifest" href="manifest.webmanifest">
+
+<!-- Open Graph / Twitter -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="KanbanFlow — Gestor de tareas">
-<meta property="og:description" content="Organiza tus tareas en tableros, columnas y calendario con drag & drop nativo, todo persistido en tu navegador.">
+<meta property="og:site_name" content="KanbanFlow">
+<meta property="og:title" content="KanbanFlow — Tableros, tareas y foco diario">
+<meta property="og:description" content="Organiza tu trabajo en tableros, calendario y métricas. Sin cuentas, sin servidores: todo se guarda en tu navegador.">
 <meta property="og:locale" content="es_CL">
-<!-- Twitter -->
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KanbanFlow — Gestor de tareas">
-<meta name="twitter:description" content="Organiza tus tareas en tableros, columnas y calendario, todo persistido en tu navegador.">
+<meta name="twitter:title" content="KanbanFlow — Tableros, tareas y foco diario">
+<meta name="twitter:description" content="Un gestor de tareas local, rápido y con diseño editorial.">
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "KanbanFlow",
-  "description": "Gestor de tareas estilo Trello/Linear con tableros, drag & drop, calendario, estadísticas e historial de actividad.",
+  "description": "Gestor de tareas visual con tableros kanban, calendario, estadísticas e historial, 100% local.",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Any",
   "inLanguage": "es-CL",
-  "author": {
-    "@type": "Person",
-    "name": "Matías Torres Sandoval"
-  },
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "CLP"
-  }
+  "author": { "@type": "Person", "name": "Matías Torres Sandoval" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CLP" }
 }
 </script>
+
+<!-- Aplica el tema guardado antes de pintar el DOM para que no haya destellos blancos -->
+<script>
+(function () {
+  try {
+    // Leemos las preferencias del usuario guardadas en localStorage
+    var prefs = JSON.parse(localStorage.getItem('kanbanflow.prefs.v1') || 'null');
+    var theme = prefs && prefs.theme;
+    
+    // Si no hay preferencia guardada, usamos la que tenga el sistema operativo
+    if (theme !== 'light' && theme !== 'dark') {
+      var legacy = localStorage.getItem('kanbanflow_theme');
+      theme = legacy === 'light' || legacy === 'dark'
+        ? legacy
+        : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    document.documentElement.dataset.theme = theme;
+  } catch (e) {
+    // Si el navegador bloquea localStorage (modo incógnito estricto), usamos tema claro por defecto
+  }
+})();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/board.css">
+<link rel="stylesheet" href="css/views.css">
 <link rel="stylesheet" href="css/modal.css">
-<link rel="stylesheet" href="css/dark.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 
-<a class="skip-link" href="#main-content">Saltar al contenido principal</a>
+<a class="skip-link" href="#main">Saltar al contenido principal</a>
 
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="app" id="app">
 
-<div class="app-shell">
+  <div class="scrim" id="scrim" hidden></div>
 
-  <!-- ===== SIDEBAR ===== -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-          <rect x="1.5" y="1.5" width="25" height="25" rx="7.5" fill="var(--accent-primary-soft)"/>
-          <rect x="1.5" y="1.5" width="25" height="25" rx="7.5" stroke="var(--accent-primary)" stroke-width="1.4" opacity="0.4"/>
-          <rect x="7" y="7" width="4.4" height="14" rx="1.5" fill="currentColor" opacity="0.95"/>
-          <rect x="12" y="7" width="4.4" height="9" rx="1.5" fill="currentColor" opacity="0.7"/>
-          <rect x="17" y="7" width="4" height="11" rx="1.5" fill="currentColor" opacity="0.45"/>
-        </svg>
-        <span class="brand-name">KanbanFlow</span>
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+    <div class="sidebar__top">
+      <a class="brand" href="#" data-action="go-board" aria-label="KanbanFlow, ir al tablero">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none">
+            <rect x="1.25" y="1.25" width="25.5" height="25.5" rx="8" fill="var(--accent-soft)"/>
+            <rect x="1.25" y="1.25" width="25.5" height="25.5" rx="8" stroke="var(--accent)" stroke-width="1.4" opacity=".45"/>
+            <rect x="6.5" y="7" width="4" height="14" rx="1.6" fill="currentColor" opacity=".95"/>
+            <rect x="11.9" y="7" width="4" height="9" rx="1.6" fill="currentColor" opacity=".68"/>
+            <rect x="17.3" y="7" width="4" height="11.5" rx="1.6" fill="currentColor" opacity=".42"/>
+          </svg>
+        </span>
+        <span class="brand__text">
+          <span class="brand__name">KanbanFlow</span>
+          <span class="brand__tag">estudio personal</span>
+        </span>
+      </a>
+      <button class="icon-btn sidebar__collapse" type="button" data-action="toggle-sidebar" aria-label="Contraer barra lateral" title="Contraer barra lateral">
+        <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.5 5 7.5 10l5 5"/></svg>
+      </button>
+    </div>
+
+    <div class="sidebar__scroll">
+      <div class="sidebar__section">
+        <div class="section-head">
+          <span class="section-head__label">Tableros</span>
+          <button class="icon-btn icon-btn--sm" type="button" data-action="new-board" aria-label="Crear tablero" title="Crear tablero">
+            <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M10 4.5v11M4.5 10h11"/></svg>
+          </button>
+        </div>
+        <nav class="board-list" id="board-list" aria-label="Tus tableros"></nav>
       </div>
-      <button class="icon-btn" id="sidebar-toggle" aria-label="Contraer barra lateral" aria-expanded="true" title="Contraer barra lateral">
-        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 4l-5 6 5 6M13 4l-5 6 5 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+
+      <div class="sidebar__section sidebar__section--views">
+        <div class="section-head"><span class="section-head__label">Vistas</span></div>
+        <nav class="view-nav" id="view-nav" aria-label="Vistas del espacio de trabajo">
+          <button class="nav-item" type="button" data-view="board" aria-current="page">
+            <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="3.5" width="6" height="13" rx="2"/><rect x="11.5" y="3.5" width="6" height="8" rx="2"/></svg>
+            <span>Tablero</span>
+          </button>
+          <button class="nav-item" type="button" data-view="calendar">
+            <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2.5"/><path d="M3 8.5h14M7 2.5v4M13 2.5v4"/></svg>
+            <span>Calendario</span>
+          </button>
+          <button class="nav-item" type="button" data-view="stats">
+            <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3.5 16.5v-6M10 16.5v-13M16.5 16.5v-8.5"/></svg>
+            <span>Estadísticas</span>
+          </button>
+          <button class="nav-item" type="button" data-view="history">
+            <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6.2v4.2l2.8 1.9"/></svg>
+            <span>Historial</span>
+          </button>
+        </nav>
+      </div>
     </div>
 
-    <button class="btn-new-board" id="new-board-btn">
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>Nuevo tablero</span>
-    </button>
-
-    <nav class="board-list" id="board-list" aria-label="Tableros" aria-live="polite"></nav>
-
-    <div class="sidebar-section">
-      <p class="sidebar-section-title" id="view-section-title">Vistas</p>
-      <button class="sidebar-link" id="view-calendar-btn" data-view="calendar" aria-describedby="view-section-title">
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        <span>Calendario</span>
+    <div class="sidebar__foot">
+      <div class="sidebar__tools">
+        <button class="tool-item" type="button" data-action="export" title="Exportar tablero (JSON)">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13V3m0 10-3.4-3.4M10 13l3.4-3.4M3.5 16.5h13"/></svg>
+          <span>Exportar</span>
+        </button>
+        <button class="tool-item" type="button" data-action="import" title="Importar tablero (JSON)">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10m0-10L6.6 6.4M10 3l3.4 3.4M3.5 16.5h13"/></svg>
+          <span>Importar</span>
+        </button>
+        <button class="tool-item" type="button" data-action="shortcuts">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5.5" width="15" height="9" rx="2.5"/><path d="M5.7 9h.01M8.6 9h.01M11.5 9h.01M14.4 9h.01M6.2 11.8h7.6"/></svg>
+          <span>Atajos</span>
+        </button>
+      </div>
+      <button class="theme-toggle" type="button" data-action="toggle-theme" aria-label="Cambiar tema" title="Cambiar tema">
+        <span class="theme-toggle__icon" data-theme-icon aria-hidden="true">
+          <svg class="theme-icon theme-icon--sun" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.8M10 15.7v1.8M17.5 10h-1.8M4.3 10H2.5M15.3 4.7l-1.3 1.3M6 14l-1.3 1.3M15.3 15.3 14 14M6 6 4.7 4.7"/></svg>
+          <svg class="theme-icon theme-icon--moon" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 12.2A7 7 0 0 1 7.8 3.5a7 7 0 1 0 8.7 8.7Z"/></svg>
+        </span>
+        <span class="theme-toggle__text" data-theme-label>Tema oscuro</span>
       </button>
-      <button class="sidebar-link" id="view-stats-btn" data-view="stats" aria-describedby="view-section-title">
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3 17V9M9 17V3M15 17v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>Estadísticas</span>
-      </button>
-      <button class="sidebar-link" id="view-history-btn" data-view="history" aria-describedby="view-section-title">
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
-        <span>Historial</span>
-      </button>
-    </div>
-
-    <div class="sidebar-footer">
-      <button class="sidebar-link" id="export-btn">
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 13V3m0 10l-3.5-3.5M10 13l3.5-3.5M4 16h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-        <span>Exportar tablero</span>
-      </button>
-      <button class="sidebar-link" id="import-btn">
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3v10m0-10l-3.5 3.5M10 3l3.5 3.5M4 16h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-        <span>Importar tablero</span>
-      </button>
-      <input type="file" id="import-input" accept="application/json" hidden>
-      <button class="sidebar-link" id="shortcuts-btn">
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5.5 9h.01M8.5 9h.01M11.5 9h.01M14.5 9h.01M6 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        <span>Atajos de teclado</span>
-      </button>
-      <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">
-        <span class="theme-icon theme-icon-light" aria-hidden="true">☀️</span>
-        <span class="theme-icon theme-icon-dark" aria-hidden="true">🌙</span>
-      </button>
+      <p class="sidebar__footnote">Todo se guarda en este navegador.<br>Sin cuentas, sin servidores.</p>
     </div>
   </aside>
 
-  <!-- ===== MAIN ===== -->
-  <main class="main-area" id="main-content" tabindex="-1">
+  <!-- ===================== WORKSPACE ===================== -->
+  <div class="workspace">
 
-    <!-- Header / Dashboard -->
     <header class="topbar">
-      <div class="topbar-left">
-        <button class="icon-btn mobile-only" id="mobile-sidebar-btn" aria-label="Abrir menú">
-          <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <div class="topbar__lead">
+        <button class="icon-btn topbar__menu" type="button" data-action="open-sidebar" aria-label="Abrir menú de tableros" aria-expanded="false" aria-controls="sidebar">
+          <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
         </button>
-        <h1 class="board-title" id="board-title">Tablero</h1>
-        <span class="board-progress-chip" id="board-progress-chip"></span>
+
+        <div class="title-block">
+          <p class="kicker" id="view-kicker">Tablero</p>
+          <div class="title-row">
+            <h1 id="board-title">KanbanFlow</h1>
+            <button class="icon-btn icon-btn--sm title-edit" type="button" data-action="edit-board" aria-label="Editar tablero actual" title="Editar tablero">
+              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.6 3.9a1.9 1.9 0 0 1 2.7 2.7L6.5 15.4l-3.4.8.8-3.4 8.7-8.9Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <span class="progress-chip" id="progress-chip" hidden></span>
       </div>
 
-      <div class="topbar-right">
-        <div class="search-box">
-          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M14 14l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <div class="topbar__actions">
+        <div class="search" id="search-wrap">
+          <svg class="search__icon" viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="5.6"/><path d="m13.4 13.4 3.3 3.3"/></svg>
           <label for="search-input" class="visually-hidden">Buscar tareas</label>
-          <input type="search" id="search-input" placeholder="Buscar tareas… (F)" autocomplete="off" aria-describedby="search-shortcut-hint">
-          <span id="search-shortcut-hint" class="visually-hidden">Atajo de teclado: F</span>
+          <input id="search-input" type="search" placeholder="Buscar tareas…" autocomplete="off" spellcheck="false" aria-describedby="search-hint">
+          <span id="search-hint" class="search__hint" aria-hidden="true"><kbd>F</kbd></span>
+          <button class="search__clear" type="button" data-action="clear-search" aria-label="Limpiar búsqueda" hidden>
+            <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg>
+          </button>
         </div>
-        <button class="btn-primary" id="new-task-btn">
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Nueva tarea
+        <button class="icon-btn topbar__search-toggle" type="button" data-action="toggle-search" aria-label="Buscar tareas" aria-expanded="false" aria-controls="search-wrap">
+          <svg viewBox="0 0 20 20" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="5.6"/><path d="m13.4 13.4 3.3 3.3"/></svg>
+        </button>
+        <button class="btn btn--primary topbar__new" type="button" data-action="new-task">
+          <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 4.5v11M4.5 10h11"/></svg>
+          <span>Nueva tarea</span>
         </button>
       </div>
     </header>
 
-    <!-- Stats dashboard -->
-    <section class="dashboard" id="dashboard" aria-label="Resumen del tablero"></section>
+    <main class="main" id="main" tabindex="-1">
+      <section class="dashboard" id="dashboard" aria-label="Resumen del tablero"></section>
 
-    <!-- Filters bar -->
-    <section class="filters-bar" id="filters-bar">
-      <select id="filter-priority" class="filter-select" aria-label="Filtrar por prioridad">
-        <option value="all">Toda prioridad</option>
-        <option value="alta">Alta</option>
-        <option value="media">Media</option>
-        <option value="baja">Baja</option>
-      </select>
-      <select id="filter-label" class="filter-select" aria-label="Filtrar por etiqueta">
-        <option value="all">Toda etiqueta</option>
-      </select>
-      <select id="filter-date" class="filter-select" aria-label="Filtrar por fecha">
-        <option value="all">Toda fecha</option>
-        <option value="today">Vence hoy</option>
-        <option value="week">Próximos 7 días</option>
-        <option value="overdue">Vencidas</option>
-        <option value="none">Sin fecha</option>
-      </select>
-      <button class="filter-clear" id="filter-clear-btn" hidden>Limpiar filtros</button>
-    </section>
-
-    <!-- Board view -->
-    <section class="board-view" id="board-view">
-      <div class="columns-wrapper" id="columns-wrapper"></div>
-    </section>
-
-    <!-- Calendar view -->
-    <section class="calendar-view" id="calendar-view" hidden>
-      <div class="calendar-header">
-        <button class="icon-btn" id="cal-prev-btn" aria-label="Mes anterior">
-          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <h2 id="calendar-month-label">Mes</h2>
-        <button class="icon-btn" id="cal-next-btn" aria-label="Mes siguiente">
-          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M8 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button class="btn-ghost" id="cal-today-btn">Hoy</button>
-      </div>
-      <div class="calendar-weekdays" id="calendar-weekdays"></div>
-      <div class="calendar-grid" id="calendar-grid"></div>
-    </section>
-
-    <!-- Stats view -->
-    <section class="stats-view" id="stats-view" hidden>
-      <div class="stats-grid">
-        <div class="stats-card">
-          <h3>Tareas por mes</h3>
-          <div class="chart-container" id="chart-tasks-per-month"></div>
+      <section class="filters" id="filters" aria-label="Filtros del tablero">
+        <div class="filters__group">
+          <span class="filters__label">Filtrar</span>
+          <label class="filter-select" for="filter-priority">
+            <span class="visually-hidden">Prioridad</span>
+            <select id="filter-priority" data-filter="priority">
+              <option value="all">Prioridad</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="baja">Baja</option>
+            </select>
+          </label>
+          <label class="filter-select" for="filter-label">
+            <span class="visually-hidden">Etiqueta</span>
+            <select id="filter-label" data-filter="label">
+              <option value="all">Etiqueta</option>
+            </select>
+          </label>
+          <label class="filter-select" for="filter-due">
+            <span class="visually-hidden">Fecha de vencimiento</span>
+            <select id="filter-due" data-filter="due">
+              <option value="all">Fecha</option>
+              <option value="today">Vence hoy</option>
+              <option value="week">Próximos 7 días</option>
+              <option value="overdue">Vencidas</option>
+              <option value="none">Sin fecha</option>
+            </select>
+          </label>
+          <button class="filter-clear" type="button" data-action="clear-filters" hidden>Limpiar</button>
         </div>
-        <div class="stats-card">
-          <h3>Distribución por estado</h3>
-          <div class="chart-container chart-donut-container" id="chart-status-donut"></div>
-          <ul class="chart-legend" id="chart-status-legend"></ul>
-        </div>
-        <div class="stats-card">
-          <h3>Productividad</h3>
-          <div class="stat-big-number" id="stat-productivity">0%</div>
-          <p class="stat-sublabel">de tareas completadas</p>
-        </div>
-        <div class="stats-card">
-          <h3>Tiempo promedio</h3>
-          <div class="stat-big-number" id="stat-avg-time">—</div>
-          <p class="stat-sublabel">días para completar una tarea</p>
-        </div>
-      </div>
-    </section>
+        <p class="filters__count" id="filters-count" aria-live="polite"></p>
+      </section>
 
-    <!-- History view -->
-    <section class="history-view" id="history-view" hidden>
-      <div class="history-list" id="history-list"></div>
-    </section>
+      <section class="view view--board" id="board-view" aria-label="Tablero de tareas"></section>
+      <section class="view view--calendar" id="calendar-view" aria-label="Calendario de vencimientos" hidden></section>
+      <section class="view view--stats" id="stats-view" aria-label="Estadísticas del tablero" hidden></section>
+      <section class="view view--history" id="history-view" aria-label="Historial de actividad" hidden></section>
+    </main>
+  </div>
 
-  </main>
+  <!-- ===================== MOBILE NAV ===================== -->
+  <nav class="mobile-nav" aria-label="Navegación rápida">
+    <button class="mobile-tab" type="button" data-view="board" aria-current="page">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="3.5" width="6" height="13" rx="2"/><rect x="11.5" y="3.5" width="6" height="8" rx="2"/></svg>
+      <span>Tablero</span>
+    </button>
+    <button class="mobile-tab" type="button" data-view="calendar">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2.5"/><path d="M3 8.5h14M7 2.5v4M13 2.5v4"/></svg>
+      <span>Agenda</span>
+    </button>
+    <button class="mobile-fab" type="button" data-action="new-task" aria-label="Nueva tarea">
+      <svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M10 4.5v11M4.5 10h11"/></svg>
+    </button>
+    <button class="mobile-tab" type="button" data-view="stats">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3.5 16.5v-6M10 16.5v-13M16.5 16.5v-8.5"/></svg>
+      <span>Métricas</span>
+    </button>
+    <button class="mobile-tab" type="button" data-view="history">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6.2v4.2l2.8 1.9"/></svg>
+      <span>Historial</span>
+    </button>
+  </nav>
 </div>
 
-<!-- ===== TASK MODAL ===== -->
-<div class="modal" id="task-modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="task-modal-title">Nueva tarea</h2>
-      <button class="icon-btn" data-close-modal aria-label="Cerrar">
-        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </button>
-    </div>
-    <form id="task-form" class="task-form">
-      <input type="hidden" name="taskId" id="task-id-field">
-      <input type="hidden" name="columnId" id="task-column-field">
-
-      <label class="field">
-        <span class="field-label">Título *</span>
-        <input type="text" name="title" required maxlength="80" placeholder="Ej: Maquetar pantalla de login" autocomplete="off">
-      </label>
-
-      <label class="field">
-        <span class="field-label">Descripción</span>
-        <textarea name="description" rows="3" maxlength="500" placeholder="Detalles, criterios de aceptación, notas…"></textarea>
-      </label>
-
-      <div class="field-row">
-        <label class="field">
-          <span class="field-label">Fecha límite</span>
-          <input type="date" name="dueDate">
-        </label>
-        <label class="field">
-          <span class="field-label">Prioridad</span>
-          <select name="priority">
-            <option value="alta">Alta</option>
-            <option value="media" selected>Media</option>
-            <option value="baja">Baja</option>
-          </select>
-        </label>
+<!-- ===================== TASK DIALOG ===================== -->
+<dialog class="dialog dialog--task" id="task-dialog" aria-labelledby="task-dialog-title">
+  <form class="dialog__panel" id="task-form" novalidate>
+    <header class="dialog__head">
+      <div>
+        <p class="dialog__kicker" id="task-dialog-kicker">Nueva tarea</p>
+        <h2 class="dialog__title" id="task-dialog-title">Añadir al tablero</h2>
       </div>
+      <button class="icon-btn" type="button" data-close-dialog aria-label="Cerrar">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg>
+      </button>
+    </header>
 
-      <div class="field-row">
+    <div class="dialog__body">
+      <input type="hidden" name="taskId">
+
+      <label class="field">
+        <span class="field__label">Título <span class="field__req" aria-hidden="true">*</span></span>
+        <input class="input input--lg" type="text" name="title" required maxlength="120" placeholder="Ej: Maquetar la pantalla de inicio" autocomplete="off">
+      </label>
+
+      <label class="field">
+        <span class="field__label">Descripción</span>
+        <textarea class="input" name="description" rows="4" maxlength="2000" placeholder="Notas, criterios de aceptación, enlaces…"></textarea>
+      </label>
+
+      <div class="field-grid">
         <label class="field">
-          <span class="field-label">Responsable (opcional)</span>
-          <input type="text" name="assignee" maxlength="40" placeholder="Nombre">
+          <span class="field__label">Columna</span>
+          <select class="input" name="columnId" id="task-column-select"></select>
         </label>
-        <label class="field field-color">
-          <span class="field-label">Color</span>
-          <input type="color" name="color" value="#4F5AE8">
+        <label class="field">
+          <span class="field__label">Fecha límite</span>
+          <input class="input" type="date" name="dueDate">
         </label>
       </div>
 
       <fieldset class="field">
-        <span class="field-label">Etiquetas</span>
-        <div class="label-chip-grid" id="label-chip-grid"></div>
+        <legend class="field__label">Prioridad</legend>
+        <div class="priority-picker" role="radiogroup" aria-label="Prioridad de la tarea">
+          <label class="priority-option priority-option--alta">
+            <input type="radio" name="priority" value="alta">
+            <span class="priority-option__dot" aria-hidden="true"></span><span>Alta</span>
+          </label>
+          <label class="priority-option priority-option--media">
+            <input type="radio" name="priority" value="media" checked>
+            <span class="priority-option__dot" aria-hidden="true"></span><span>Media</span>
+          </label>
+          <label class="priority-option priority-option--baja">
+            <input type="radio" name="priority" value="baja">
+            <span class="priority-option__dot" aria-hidden="true"></span><span>Baja</span>
+          </label>
+        </div>
       </fieldset>
 
-      <div class="modal-actions">
-        <button type="button" class="btn-danger" id="task-delete-btn" hidden>Eliminar</button>
-        <div class="modal-actions-right">
-          <button type="button" class="btn-ghost" data-close-modal>Cancelar</button>
-          <button type="submit" class="btn-primary">Guardar tarea</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- ===== NEW BOARD MODAL ===== -->
-<div class="modal" id="board-modal" role="dialog" aria-modal="true" aria-labelledby="board-modal-title">
-  <div class="modal-content modal-small">
-    <div class="modal-header">
-      <h2 id="board-modal-title">Nuevo tablero</h2>
-      <button class="icon-btn" data-close-modal aria-label="Cerrar">
-        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </button>
-    </div>
-    <form id="board-form" class="task-form">
       <label class="field">
-        <span class="field-label">Nombre del tablero</span>
-        <input type="text" name="boardName" required maxlength="40" placeholder="Ej: Universidad" autocomplete="off">
+        <span class="field__label">Responsable</span>
+        <input class="input" type="text" name="assignee" maxlength="60" placeholder="Nombre o iniciales" autocomplete="off">
       </label>
-      <div class="modal-actions">
-        <div class="modal-actions-right">
-          <button type="button" class="btn-ghost" data-close-modal>Cancelar</button>
-          <button type="submit" class="btn-primary">Crear tablero</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
 
-<!-- ===== CONFIRM MODAL ===== -->
-<div class="modal" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
-  <div class="modal-content modal-small">
-    <div class="modal-header">
-      <h2 class="confirm-title" id="confirm-modal-title">¿Confirmar acción?</h2>
-    </div>
-    <p class="confirm-message">Esta acción no se puede deshacer.</p>
-    <div class="modal-actions">
-      <div class="modal-actions-right">
-        <button type="button" class="btn-ghost confirm-cancel-btn">Cancelar</button>
-        <button type="button" class="btn-danger confirm-action-btn">Eliminar</button>
-      </div>
-    </div>
-  </div>
-</div>
+      <fieldset class="field">
+        <legend class="field__label">Etiquetas</legend>
+        <div class="label-picker" id="label-picker"></div>
+      </fieldset>
 
-<!-- ===== SHORTCUTS MODAL ===== -->
-<div class="modal" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
-  <div class="modal-content modal-small">
-    <div class="modal-header">
-      <h2 id="shortcuts-modal-title">Atajos de teclado</h2>
-      <button class="icon-btn" data-close-modal aria-label="Cerrar">
-        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <p class="task-meta" id="task-meta" hidden></p>
+    </div>
+
+    <footer class="dialog__foot">
+      <button class="btn btn--ghost btn--danger-text" type="button" data-task-delete hidden>Eliminar</button>
+      <div class="dialog__spacer"></div>
+      <button class="btn btn--ghost" type="button" data-close-dialog>Cancelar</button>
+      <button class="btn btn--primary" type="submit">Guardar tarea</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- ===================== BOARD DIALOG ===================== -->
+<dialog class="dialog dialog--sm" id="board-dialog" aria-labelledby="board-dialog-title">
+  <form class="dialog__panel" id="board-form" novalidate>
+    <header class="dialog__head">
+      <div>
+        <p class="dialog__kicker" id="board-dialog-kicker">Nuevo tablero</p>
+        <h2 class="dialog__title" id="board-dialog-title">Un espacio para cada proyecto</h2>
+      </div>
+      <button class="icon-btn" type="button" data-close-dialog aria-label="Cerrar">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg>
       </button>
+    </header>
+    <div class="dialog__body">
+      <input type="hidden" name="boardId">
+      <label class="field">
+        <span class="field__label">Nombre del tablero</span>
+        <input class="input input--lg" type="text" name="boardName" required maxlength="50" placeholder="Ej: Producto, Tesis, Cliente Acme" autocomplete="off">
+      </label>
+      <fieldset class="field">
+        <legend class="field__label">Color de identidad</legend>
+        <div class="swatches" id="board-swatches"></div>
+      </fieldset>
     </div>
-    <ul class="shortcuts-list">
-      <li><kbd>N</kbd><span>Nueva tarea</span></li>
-      <li><kbd>F</kbd><span>Buscar</span></li>
-      <li><kbd>Enter</kbd><span>Abrir tarea enfocada</span></li>
-      <li><kbd>Alt</kbd> + <kbd>←/→</kbd><span>Mover tarea a otra columna</span></li>
-      <li><kbd>Alt</kbd> + <kbd>↑/↓</kbd><span>Reordenar tarea</span></li>
-      <li><kbd>Esc</kbd><span>Cerrar modal</span></li>
-    </ul>
+    <footer class="dialog__foot">
+      <button class="btn btn--ghost btn--danger-text" type="button" data-board-delete hidden>Eliminar tablero</button>
+      <div class="dialog__spacer"></div>
+      <button class="btn btn--ghost" type="button" data-close-dialog>Cancelar</button>
+      <button class="btn btn--primary" type="submit">Guardar</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- ===================== CONFIRM DIALOG ===================== -->
+<dialog class="dialog dialog--sm" id="confirm-dialog" aria-labelledby="confirm-title">
+  <form method="dialog" class="dialog__panel">
+    <header class="dialog__head">
+      <div>
+        <p class="dialog__kicker">Confirmar</p>
+        <h2 class="dialog__title" id="confirm-title">¿Seguro?</h2>
+      </div>
+    </header>
+    <div class="dialog__body">
+      <p class="confirm-copy" id="confirm-message">Esta acción no se puede deshacer.</p>
+    </div>
+    <footer class="dialog__foot">
+      <div class="dialog__spacer"></div>
+      <button class="btn btn--ghost" type="submit" value="cancel">Cancelar</button>
+      <button class="btn btn--danger" type="submit" value="confirm" id="confirm-ok">Eliminar</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- ===================== DAY DIALOG ===================== -->
+<dialog class="dialog dialog--sm" id="day-dialog" aria-labelledby="day-dialog-title">
+  <div class="dialog__panel">
+    <header class="dialog__head">
+      <div>
+        <p class="dialog__kicker" id="day-dialog-kicker">Agenda</p>
+        <h2 class="dialog__title" id="day-dialog-title">Día</h2>
+      </div>
+      <button class="icon-btn" type="button" data-close-dialog aria-label="Cerrar">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg>
+      </button>
+    </header>
+    <div class="dialog__body" id="day-dialog-body"></div>
+    <footer class="dialog__foot">
+      <div class="dialog__spacer"></div>
+      <button class="btn btn--ghost" type="button" data-close-dialog>Cerrar</button>
+      <button class="btn btn--primary" type="button" id="day-add-task">Añadir tarea</button>
+    </footer>
   </div>
-</div>
+</dialog>
 
-<!-- ===== TOAST CONTAINER ===== -->
-<div class="toast-container" id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+<!-- ===================== SHORTCUTS DIALOG ===================== -->
+<dialog class="dialog dialog--sm" id="shortcuts-dialog" aria-labelledby="shortcuts-title">
+  <div class="dialog__panel">
+    <header class="dialog__head">
+      <div>
+        <p class="dialog__kicker">Productividad</p>
+        <h2 class="dialog__title" id="shortcuts-title">Atajos de teclado</h2>
+      </div>
+      <button class="icon-btn" type="button" data-close-dialog aria-label="Cerrar">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg>
+      </button>
+    </header>
+    <div class="dialog__body">
+      <ul class="shortcuts">
+        <li><span class="shortcuts__keys"><kbd>N</kbd></span><span>Nueva tarea</span></li>
+        <li><span class="shortcuts__keys"><kbd>F</kbd><span class="shortcuts__or">o</span><kbd>/</kbd></span><span>Buscar tareas</span></li>
+        <li><span class="shortcuts__keys"><kbd>?</kbd></span><span>Abrir esta ayuda</span></li>
+        <li><span class="shortcuts__keys"><kbd>Enter</kbd></span><span>Abrir la tarjeta enfocada</span></li>
+        <li><span class="shortcuts__keys"><kbd>Alt</kbd><kbd>←</kbd><kbd>→</kbd></span><span>Mover entre columnas</span></li>
+        <li><span class="shortcuts__keys"><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></span><span>Reordenar en la columna</span></li>
+        <li><span class="shortcuts__keys"><kbd>Esc</kbd></span><span>Cerrar diálogo o búsqueda</span></li>
+      </ul>
+      <p class="shortcuts__note">En pantallas táctiles, mantén pulsada el asa <span aria-hidden="true">⠿</span> de una tarjeta para arrastrarla.</p>
+    </div>
+  </div>
+</dialog>
 
-<!-- ===== DUE NOTIFICATION BANNER ===== -->
-<div class="due-banner" id="due-banner" role="alert" hidden>
-  <span id="due-banner-text"></span>
-  <button class="icon-btn" id="due-banner-close" aria-label="Cerrar aviso">
-    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-  </button>
-</div>
+<div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+<input type="file" id="import-input" accept=".json,application/json" hidden>
 
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

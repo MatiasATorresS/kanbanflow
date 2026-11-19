@@ -1,0 +1,22 @@
+{
+  "name": "KanbanFlow — Tableros y foco diario",
+  "short_name": "KanbanFlow",
+  "description": "Gestor de tareas visual con tableros kanban, calendario, estadísticas e historial. Rápido, privado y 100% local.",
+  "lang": "es-CL",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F6F2EA",
+  "theme_color": "#2F5B4C",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "icons/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
